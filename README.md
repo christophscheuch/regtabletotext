@@ -1,4 +1,4 @@
-# regtabletotext: helpers to format regression output
+# regtabletotext: helpers to print regression output as text
 
 This package is a collection of helper functions to print regression output of the Python packages `statsmodels` and `linearmodels` as text strings. The helpers are particularly useful for users who want to render regression output in [Quarto](https://quarto.org/) to HTML and PDF.
 
@@ -11,6 +11,7 @@ The following code chunk
 import numpy as np
 import statsmodels.api as sm
 import statsmodels.formula.api as smf
+from regtabletotext import prettify_statsmodels
 
 df = sm.datasets.get_rdataset("Guerry", "HistData").data
 df = df[['Lottery', 'Literacy', 'Wealth', 'Region']].dropna()
@@ -18,8 +19,9 @@ df = df[['Lottery', 'Literacy', 'Wealth', 'Region']].dropna()
 mod = smf.ols(formula='Lottery ~ Literacy + Wealth + Region', data=df)
 res = mod.fit()
 
-pretty_statsmodels(res)
+prettify_statsmodels(res)
 ```
+
 returns this text
 ```
 Model:

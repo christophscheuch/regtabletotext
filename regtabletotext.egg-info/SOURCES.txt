@@ -1,12 +1,11 @@
+.gitignore
 HISTORY.md
 LICENSE
 README.md
 setup.py
 regtabletotext/__init__.py
-regtabletotext/regtabletotext
 regtabletotext.egg-info/PKG-INFO
 regtabletotext.egg-info/SOURCES.txt
 regtabletotext.egg-info/dependency_links.txt
 regtabletotext.egg-info/requires.txt
 regtabletotext.egg-info/top_level.txt
-tests/tests-regtabletotext

@@ -8,7 +8,7 @@ with open('HISTORY.md') as history_file:
 
 setup_args = dict(
     name='regtabletotext',
-    version='0.0.1',
+    version='0.0.4',
     description='Helpers to print regression output as well-formated text',
     long_description_content_type="text/markdown",
     long_description=README + '\n\n' + HISTORY,
@@ -16,9 +16,9 @@ setup_args = dict(
     packages=find_packages(),
     author='Christoph Scheuch',
     author_email='christoph.scheuch@gmail.com',
-    keywords=['Regression', 'Table', 'Formatting'],
-    url='https://github.com/christophscheuch/regtableformatter',
-    download_url='https://pypi.org/project/regtableformatter/'
+    keywords=['Regression', 'Table', 'Formatting', 'Quarto', 'Text'],
+    url='https://github.com/christophscheuch/regtabletotext',
+    download_url='https://pypi.org/project/regtabletotext/'
 )
 
 install_requires = [

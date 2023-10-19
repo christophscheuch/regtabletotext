@@ -1,17 +1,17 @@
 Metadata-Version: 2.1
 Name: regtabletotext
-Version: 0.0.1
+Version: 0.0.4
 Summary: Helpers to print regression output as well-formated text
-Home-page: https://github.com/christophscheuch/regtableformatter
-Download-URL: https://pypi.org/project/regtableformatter/
+Home-page: https://github.com/christophscheuch/regtabletotext
+Download-URL: https://pypi.org/project/regtabletotext/
 Author: Christoph Scheuch
 Author-email: christoph.scheuch@gmail.com
 License: MIT
-Keywords: Regression,Table,Formatting
+Keywords: Regression,Table,Formatting,Quarto,Text
 Description-Content-Type: text/markdown
 License-File: LICENSE
 
-# regtabletotext: helpers to format regression output
+# regtabletotext: helpers to print regression output as text
 
 This package is a collection of helper functions to print regression output of the Python packages `statsmodels` and `linearmodels` as text strings. The helpers are particularly useful for users who want to render regression output in [Quarto](https://quarto.org/) to HTML and PDF.
 
@@ -24,6 +24,7 @@ The following code chunk
 import numpy as np
 import statsmodels.api as sm
 import statsmodels.formula.api as smf
+from regtabletotext import prettify_statsmodels
 
 df = sm.datasets.get_rdataset("Guerry", "HistData").data
 df = df[['Lottery', 'Literacy', 'Wealth', 'Region']].dropna()
@@ -31,8 +32,9 @@ df = df[['Lottery', 'Literacy', 'Wealth', 'Region']].dropna()
 mod = smf.ols(formula='Lottery ~ Literacy + Wealth + Region', data=df)
 res = mod.fit()
 
-pretty_statsmodels(res)
+prettify_statsmodels(res)
 ```
+
 returns this text
 ```
 Model:
