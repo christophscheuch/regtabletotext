@@ -1,0 +1,10 @@
+import pandas as pd
+import numpy as np
+import statsmodels.api as sm
+import statsmodels.formula.api as smf
+
+df = sm.datasets.get_rdataset("Guerry", "HistData").data
+df = df[['Lottery', 'Literacy', 'Wealth', 'Region']].dropna()
+
+mod = smf.ols(formula='Lottery ~ Literacy + Wealth + Region', data=df)
+res = mod.fit()
