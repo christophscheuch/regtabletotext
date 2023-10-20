@@ -18,7 +18,10 @@ setup_args = dict(
     author_email='christoph.scheuch@gmail.com',
     keywords=['Regression', 'Table', 'Formatting', 'Quarto', 'Text'],
     url='https://github.com/christophscheuch/regtabletotext',
-    download_url='https://pypi.org/project/regtabletotext/'
+    download_url='https://pypi.org/project/regtabletotext/',
+    setup_requires=['pytest-runner'],
+    tests_require=['pytest'],
+    test_suite='tests'
 )
 
 install_requires = [
