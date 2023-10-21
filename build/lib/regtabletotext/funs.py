@@ -90,24 +90,25 @@ def create_coefficients_table(result, **options):
         # Extract result 
         result_data = result.summary().tables[1].data
 
+        # Check if 't' column is present, otherwise use 'z' column
+        column_to_use = 't' if 't' in result_data[0] else 'z'
+        p_value_column = 'P>|t|' if 't' in result_data[0] else 'P>|z|'
+
         # Collect coefficient statistics in a data frame
-        coefficients_table = (pd.DataFrame(
-                result_data[1:], 
-                columns=result_data[0]
-            )
-            .get(["", "coef", "std err", "t", "P>|t|"])
+        coefficients_table = (
+            pd.DataFrame(result_data[1:], columns=result_data[0])
+            .get(["", "coef", "std err", column_to_use, p_value_column])
             .rename(columns={
                 "coef": "Estimate",
                 "std err": "Std. Error",
-                "t": "t-Statistic",
-                "P>|t|": "p-Value"
-                },
-            )
+                column_to_use: "Statistic",
+                p_value_column: "p-Value"
+            })
             .set_index("")
             .apply(pd.to_numeric, errors='coerce')
             .round(digits)
         )
-    
+
     if ("linearmodels.panel.results.PanelEffectsResults" in result_type):
         # Extract result 
         result_data = result.summary.tables[1].data

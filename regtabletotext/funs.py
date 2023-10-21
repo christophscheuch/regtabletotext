@@ -1,6 +1,21 @@
 ALLOWED_OPTIONS = {'digits', 'include_residuals'}
+TYPE_STATSMODELS = 'statsmodels.regression.linear_model.RegressionResultsWrapper'
+TYPE_LINEARMODELS = 'linearmodels.panel.results.PanelEffectsResults'
+SUPPORTED_MODELS = {TYPE_STATSMODELS, TYPE_LINEARMODELS}
 
 import pandas as pd
+
+def is_result_type_valid(result):
+    result_type = type(result).__module__ + "." + type(result).__name__
+    return(result_type in SUPPORTED_MODELS)
+
+def is_result_type_statsmodels(result):
+    result_type = type(result).__module__ + "." + type(result).__name__
+    return(TYPE_STATSMODELS in result_type)
+
+def is_result_type_linearmodels(result):
+    result_type = type(result).__module__ + "." + type(result).__name__
+    return(TYPE_LINEARMODELS in result_type)
 
 def calculate_residuals_statistics(result, **options):
     """
@@ -20,19 +35,18 @@ def calculate_residuals_statistics(result, **options):
         * Max: Maximum value of residuals.
     """
     
-    # Check if the result object is from statsmodels
-    result_type = str(type(result))
-    if ('statsmodels.regression.linear_model.RegressionResultsWrapper' not in result_type) and ('linearmodels.panel.results.PanelEffectsResults' not in result_type):
+    # Check if the result object is valid
+    if not is_result_type_valid(result):
         raise ValueError("The 'result' parameter should be a single regression result object from statsmodels or linearmodels.")
     
     # Extract options or set defaults
     digits = options.get('digits', 3)
     
     # Extract residuals
-    if ('statsmodels.regression.linear_model.RegressionResultsWrapper' in result_type):
+    if is_result_type_statsmodels(result):
         residuals = result.resid
     
-    if ('linearmodels.panel.results.PanelEffectsResults' in result_type):
+    if is_result_type_linearmodels(result):
         residuals = result.resids
 
     stats = {
@@ -78,37 +92,37 @@ def create_coefficients_table(result, **options):
         * p-Value: p-values associated with the t-statistics.
     """
 
-    # Check if the result object is from statsmodels
-    result_type = str(type(result))
-    if ('statsmodels.regression.linear_model.RegressionResultsWrapper' not in result_type) and ('linearmodels.panel.results.PanelEffectsResults' not in result_type):
+    # Check if the result object is valid
+    if not is_result_type_valid(result):
         raise ValueError("The 'result' parameter should be a single regression result object from statsmodels or linearmodels.")
     
     # Extract options or set defaults
     digits = options.get('digits', 3)
     
-    if ("statsmodels.regression.linear_model.RegressionResultsWrapper" in result_type):
+    if is_result_type_statsmodels(result):
         # Extract result 
         result_data = result.summary().tables[1].data
 
+        # Check if 't' column is present, otherwise use 'z' column
+        column_to_use = 't' if 't' in result_data[0] else 'z'
+        p_value_column = 'P>|t|' if 't' in result_data[0] else 'P>|z|'
+
         # Collect coefficient statistics in a data frame
-        coefficients_table = (pd.DataFrame(
-                result_data[1:], 
-                columns=result_data[0]
-            )
-            .get(["", "coef", "std err", "t", "P>|t|"])
+        coefficients_table = (
+            pd.DataFrame(result_data[1:], columns=result_data[0])
+            .get(["", "coef", "std err", column_to_use, p_value_column])
             .rename(columns={
                 "coef": "Estimate",
                 "std err": "Std. Error",
-                "t": "t-Statistic",
-                "P>|t|": "p-Value"
-                },
-            )
+                column_to_use: "Statistic",
+                p_value_column: "p-Value"
+            })
             .set_index("")
             .apply(pd.to_numeric, errors='coerce')
             .round(digits)
         )
-    
-    if ("linearmodels.panel.results.PanelEffectsResults" in result_type):
+
+    if is_result_type_linearmodels(result):
         # Extract result 
         result_data = result.summary.tables[1].data
 
@@ -158,9 +172,8 @@ def prettify_result(result, **options):
     None
         The function prints the formatted summary directly.
     """
-    # Check if the result object is from statsmodels
-    result_type = str(type(result))
-    if ('statsmodels.regression.linear_model.RegressionResultsWrapper' not in result_type) and ('linearmodels.panel.results.PanelEffectsResults' not in result_type):
+    # Check if the result object is valid
+    if not is_result_type_valid(result):
         raise ValueError("The 'result' parameter should be a single regression result object from statsmodels or linearmodels.")
     
     # Check if options are valid
@@ -172,7 +185,7 @@ def prettify_result(result, **options):
     digits = options.get('digits', 3)
     include_residuals = options.get('include_residuals', False)
     
-    if ("statsmodels.regression.linear_model.RegressionResultsWrapper" in result_type):
+    if is_result_type_statsmodels(result):
         # Initialize the output string
         output = f"\nModel:\n{result.model.formula}\n\n"
         
@@ -192,7 +205,7 @@ def prettify_result(result, **options):
             f"- F-statistic: {result.fvalue:.{digits}f} on {result.df_model:.0f} and {result.df_resid:.0f} DF, p-value: {result.f_pvalue:.{digits}f}\n"
         )
     
-    if ("linearmodels.panel.results.PanelEffectsResults" in result_type):
+    if is_result_type_linearmodels(result):
         # Initialize the output string
         output = f"\nModel:\n{result.model.formula}\n\n"
         

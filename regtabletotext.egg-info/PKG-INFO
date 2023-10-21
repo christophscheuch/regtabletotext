@@ -1,6 +1,6 @@
 Metadata-Version: 2.1
 Name: regtabletotext
-Version: 0.0.5
+Version: 0.0.6
 Summary: Helpers to print regression output as well-formated text
 Home-page: https://github.com/christophscheuch/regtabletotext
 Download-URL: https://pypi.org/project/regtabletotext/
@@ -117,6 +117,9 @@ Summary statistics:
 - Overall R-squared: 0.008, Within R-squared: 0.006
 - F-statistic: 1.048, p-value: 0.351
 ```
+
+# Version 0.0.6
+- Introduced check if 't' column is present, otherwise use 'z' column to handle models with only one coefficient
 
 # Version 0.0.5
 - Replaced explicit options by flexible `**options` parameter

@@ -3,6 +3,10 @@ HISTORY.md
 LICENSE
 README.md
 setup.py
+dist/regtabletotext-0.0.4-py3-none-any.whl
+dist/regtabletotext-0.0.4.tar.gz
+dist/regtabletotext-0.0.5-py3-none-any.whl
+dist/regtabletotext-0.0.5.tar.gz
 regtabletotext/__init__.py
 regtabletotext/funs.py
 regtabletotext.egg-info/PKG-INFO
