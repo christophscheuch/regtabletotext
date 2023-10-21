@@ -1,6 +1,76 @@
-ALLOWED_OPTIONS = {'digits', 'include_residuals'}
-
+# ====================
+# SECTION: Imports
+# ====================
 import pandas as pd
+
+# ====================
+# SECTION: Constants
+# ====================
+ALLOWED_OPTIONS = {'digits', 'include_residuals', 'max_width'}
+DEFAULT_DIGITS = 3
+DEFAULT_INCLUDE_RESIDUALS = False
+DEFAULT_MAX_WIDTH = 64
+TYPE_STATSMODELS = 'statsmodels.regression.linear_model.RegressionResultsWrapper'
+TYPE_LINEARMODELS = 'linearmodels.panel.results.PanelEffectsResults'
+SUPPORTED_MODELS = {TYPE_STATSMODELS, TYPE_LINEARMODELS}
+
+# ===================
+# SECTION: Validation Functions
+# ====================
+def is_result_type_valid(result):
+    result_type = type(result).__module__ + "." + type(result).__name__
+    return(result_type in SUPPORTED_MODELS)
+
+def is_result_type_statsmodels(result):
+    result_type = type(result).__module__ + "." + type(result).__name__
+    return(result_type in TYPE_STATSMODELS)
+
+def is_result_type_linearmodels(result):
+    result_type = type(result).__module__ + "." + type(result).__name__
+    return(result_type in TYPE_LINEARMODELS)
+
+# ===================
+# SECTION: Helper Functions
+# ====================
+def clean_model_formula(model_formula, max_width=DEFAULT_MAX_WIDTH):
+    """
+    Cleans and formats a given model formula to fit within a specified width.
+
+    This function takes a model formula as input, removes any extra spaces, and ensures that the 
+    formula does not exceed the specified maximum width (`max_width`). If the formula exceeds the 
+    `max_width`, it splits the formula at the last '+' sign before the `max_width` and continues 
+    the formula on the next line.
+
+    Parameters:
+    ----------
+    model_formula : str
+        The model formula to be cleaned and formatted. Typically, this is a string representation 
+        of a regression model formula, e.g., "y ~ x1 + x2 + x3".
+
+    max_width : int, optional
+        The maximum width (number of characters) that the formula should occupy on a single line. 
+        If the formula exceeds this width, it will be split and continued on the next line. 
+        Default is set by `DEFAULT_MAX_WIDTH`.
+
+    Returns:
+    -------
+    str
+        The cleaned and formatted model formula.
+
+    Examples:
+    --------
+    >>> clean_model_formula("y ~ x1 + x2 + x3", max_width=10)
+    "y ~ x1 +\n x2 + x3"
+    """
+        
+    model_formula_cleaned = ' '.join(model_formula.split())
+
+    if len(model_formula_cleaned) <= max_width:
+        return model_formula_cleaned
+    else:
+        # Split the formula at the last '+' before max_width
+        split_index = model_formula_cleaned.rfind('+', 0, max_width)
+        return model_formula_cleaned[:split_index] + '\n + ' + model_formula_cleaned[split_index+1:].strip()
 
 def calculate_residuals_statistics(result, **options):
     """
@@ -20,19 +90,18 @@ def calculate_residuals_statistics(result, **options):
         * Max: Maximum value of residuals.
     """
     
-    # Check if the result object is from statsmodels
-    result_type = str(type(result))
-    if ('statsmodels.regression.linear_model.RegressionResultsWrapper' not in result_type) and ('linearmodels.panel.results.PanelEffectsResults' not in result_type):
+    # Check if the result object is valid
+    if not is_result_type_valid(result):
         raise ValueError("The 'result' parameter should be a single regression result object from statsmodels or linearmodels.")
     
-    # Extract options or set defaults
-    digits = options.get('digits', 3)
+    # Extract options or use defaults
+    digits = options.get('digits', DEFAULT_DIGITS)
     
     # Extract residuals
-    if ('statsmodels.regression.linear_model.RegressionResultsWrapper' in result_type):
+    if is_result_type_statsmodels(result):
         residuals = result.resid
     
-    if ('linearmodels.panel.results.PanelEffectsResults' in result_type):
+    if is_result_type_linearmodels(result):
         residuals = result.resids
 
     stats = {
@@ -78,15 +147,15 @@ def create_coefficients_table(result, **options):
         * p-Value: p-values associated with the t-statistics.
     """
 
-    # Check if the result object is from statsmodels
-    result_type = str(type(result))
-    if ('statsmodels.regression.linear_model.RegressionResultsWrapper' not in result_type) and ('linearmodels.panel.results.PanelEffectsResults' not in result_type):
+    # Check if the result object is valid
+    if not is_result_type_valid(result):
         raise ValueError("The 'result' parameter should be a single regression result object from statsmodels or linearmodels.")
     
-    # Extract options or set defaults
-    digits = options.get('digits', 3)
+    # Extract options or use defaults
+    digits = options.get('digits', DEFAULT_DIGITS)
+    max_width = options.get('max_width', DEFAULT_MAX_WIDTH)
     
-    if ("statsmodels.regression.linear_model.RegressionResultsWrapper" in result_type):
+    if is_result_type_statsmodels(result):
         # Extract result 
         result_data = result.summary().tables[1].data
 
@@ -109,7 +178,7 @@ def create_coefficients_table(result, **options):
             .round(digits)
         )
 
-    if ("linearmodels.panel.results.PanelEffectsResults" in result_type):
+    if is_result_type_linearmodels(result):
         # Extract result 
         result_data = result.summary.tables[1].data
 
@@ -130,9 +199,26 @@ def create_coefficients_table(result, **options):
             .apply(pd.to_numeric, errors='coerce')
             .round(digits)
         )
+
+    # Truncate coefficient names if they exceed max_width
+    for index, row in coefficients_table.iterrows():
+        coeff_name = index
+        values_str = ' '.join(map(str, row.values))
+        
+        # Check if the combined width exceeds max_width
+        if len(coeff_name) + len(values_str) + 20 > max_width: 
+            # Calculate how much to truncate the coefficient name
+            trunc_length = max_width - len(values_str) - 23 
+            truncated_name = coeff_name[:trunc_length] + "..."
+            
+            # Update the index in the DataFrame
+            coefficients_table = coefficients_table.rename(index={coeff_name: truncated_name})
     
     return(coefficients_table)
-  
+
+# ===================
+# SECTION: Main Functions
+# ====================
 def prettify_result(result, **options):
     """
     Format and print regression result in a style similar to R's summary() output for linear models.
@@ -159,9 +245,8 @@ def prettify_result(result, **options):
     None
         The function prints the formatted summary directly.
     """
-    # Check if the result object is from statsmodels
-    result_type = str(type(result))
-    if ('statsmodels.regression.linear_model.RegressionResultsWrapper' not in result_type) and ('linearmodels.panel.results.PanelEffectsResults' not in result_type):
+    # Check if the result object is valid
+    if not is_result_type_valid(result):
         raise ValueError("The 'result' parameter should be a single regression result object from statsmodels or linearmodels.")
     
     # Check if options are valid
@@ -169,13 +254,14 @@ def prettify_result(result, **options):
     if invalid_options:
         raise ValueError(f"Invalid options provided: {', '.join(invalid_options)}")
     
-    # Extract options or set defaults
-    digits = options.get('digits', 3)
-    include_residuals = options.get('include_residuals', False)
-    
-    if ("statsmodels.regression.linear_model.RegressionResultsWrapper" in result_type):
+    # Extract options or use defaults
+    digits = options.get('digits', DEFAULT_DIGITS)
+    include_residuals = options.get('include_residuals', DEFAULT_INCLUDE_RESIDUALS)
+    max_width = options.get('max_width', DEFAULT_MAX_WIDTH)
+
+    if is_result_type_statsmodels(result):
         # Initialize the output string
-        output = f"\nModel:\n{result.model.formula}\n\n"
+        output = f"OLS Model:\n{clean_model_formula(result.model.formula, max_width=max_width)}\n\n"
         
         # Add residuals to the output string if required
         if include_residuals:
@@ -183,7 +269,7 @@ def prettify_result(result, **options):
 
         # Add coefficients to the output string
         # Assuming you have a function called 'create_coefficients_table' that creates the coefficients table
-        output += f"Coefficients:\n{create_coefficients_table(result, digits=digits).to_string()}\n\n"
+        output += f"Coefficients:\n{create_coefficients_table(result, digits=digits, max_width=max_width).to_string()}\n\n"
 
         # Add footer with additional statistics to the output string
         output += (
@@ -193,9 +279,9 @@ def prettify_result(result, **options):
             f"- F-statistic: {result.fvalue:.{digits}f} on {result.df_model:.0f} and {result.df_resid:.0f} DF, p-value: {result.f_pvalue:.{digits}f}\n"
         )
     
-    if ("linearmodels.panel.results.PanelEffectsResults" in result_type):
+    if is_result_type_linearmodels(result):
         # Initialize the output string
-        output = f"\nModel:\n{result.model.formula}\n\n"
+        output = f"Panel OLS Model:\n{clean_model_formula(result.model.formula)}\n\n"
         
         # Add residuals to the output string if required
         if include_residuals:
@@ -216,4 +302,3 @@ def prettify_result(result, **options):
 
     # Print the output string
     print(output)
-str
