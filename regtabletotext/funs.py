@@ -11,11 +11,11 @@ def is_result_type_valid(result):
 
 def is_result_type_statsmodels(result):
     result_type = type(result).__module__ + "." + type(result).__name__
-    return(TYPE_STATSMODELS in result_type)
+    return(result_type in TYPE_STATSMODELS)
 
 def is_result_type_linearmodels(result):
     result_type = type(result).__module__ + "." + type(result).__name__
-    return(TYPE_LINEARMODELS in result_type)
+    return(result_type in TYPE_LINEARMODELS)
 
 def calculate_residuals_statistics(result, **options):
     """
