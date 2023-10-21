@@ -145,7 +145,11 @@ def create_coefficients_table(result, **options):
         )
     
     return(coefficients_table)
-  
+
+def clean_model_formula(model_formula):
+    model_formula_cleaned = ' '.join(model_formula.split())
+    return(model_formula_cleaned)
+
 def prettify_result(result, **options):
     """
     Format and print regression result in a style similar to R's summary() output for linear models.
@@ -184,10 +188,10 @@ def prettify_result(result, **options):
     # Extract options or set defaults
     digits = options.get('digits', 3)
     include_residuals = options.get('include_residuals', False)
-    
+
     if is_result_type_statsmodels(result):
         # Initialize the output string
-        output = f"\OLS Model:\n{result.model.formula}\n\n"
+        output = f"OLS Model:\n{clean_model_formula(result.model.formula)}\n\n"
         
         # Add residuals to the output string if required
         if include_residuals:
@@ -207,7 +211,7 @@ def prettify_result(result, **options):
     
     if is_result_type_linearmodels(result):
         # Initialize the output string
-        output = f"\Panel OLS Model:\n{result.model.formula}\n\n"
+        output = f"Panel OLS Model:\n{clean_model_formula(result.model.formula)}\n\n"
         
         # Add residuals to the output string if required
         if include_residuals:

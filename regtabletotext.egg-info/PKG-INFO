@@ -1,6 +1,6 @@
 Metadata-Version: 2.1
 Name: regtabletotext
-Version: 0.0.6
+Version: 0.0.7
 Summary: Helpers to print regression output as well-formated text
 Home-page: https://github.com/christophscheuch/regtabletotext
 Download-URL: https://pypi.org/project/regtabletotext/
@@ -29,6 +29,11 @@ pip install regtabletotext
 
 ## How to use regtabletotext?
 
+Currently supported model types:
+
+- `statsmodels.regression.linear_model.RegressionResultsWrapper`
+- `linearmodels.panel.results.PanelEffectsResults`
+
 ### For statsmodels regression output
 
 The following code chunk
@@ -49,7 +54,7 @@ prettify_result(res)
 
 returns this text
 ```
-Model:
+OLS Model:
 Lottery ~ Literacy + Wealth + Region
 
 Coefficients:
@@ -103,7 +108,7 @@ prettify_result(result)
 produces this output
 
 ```
-Model:
+Panel OLS Model:
 y ~ x1 + x2 + EntityEffects + TimeEffects
 
 Coefficients:
@@ -117,6 +122,9 @@ Summary statistics:
 - Overall R-squared: 0.008, Within R-squared: 0.006
 - F-statistic: 1.048, p-value: 0.351
 ```
+
+# Version 0.0.7
+- Moved type checks to functions and globals
 
 # Version 0.0.6
 - Introduced check if 't' column is present, otherwise use 'z' column to handle models with only one coefficient
