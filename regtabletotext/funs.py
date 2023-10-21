@@ -1,4 +1,6 @@
 ALLOWED_OPTIONS = {'digits', 'include_residuals'}
+DEFAULT_DIGITS = 3
+DEFAULT_INCLUDE_RESIDUALS = False
 TYPE_STATSMODELS = 'statsmodels.regression.linear_model.RegressionResultsWrapper'
 TYPE_LINEARMODELS = 'linearmodels.panel.results.PanelEffectsResults'
 SUPPORTED_MODELS = {TYPE_STATSMODELS, TYPE_LINEARMODELS}
@@ -40,7 +42,7 @@ def calculate_residuals_statistics(result, **options):
         raise ValueError("The 'result' parameter should be a single regression result object from statsmodels or linearmodels.")
     
     # Extract options or set defaults
-    digits = options.get('digits', 3)
+    digits = options.get('digits', DEFAULT_DIGITS)
     
     # Extract residuals
     if is_result_type_statsmodels(result):
@@ -97,7 +99,7 @@ def create_coefficients_table(result, **options):
         raise ValueError("The 'result' parameter should be a single regression result object from statsmodels or linearmodels.")
     
     # Extract options or set defaults
-    digits = options.get('digits', 3)
+    digits = options.get('digits', DEFAULT_DIGITS)
     
     if is_result_type_statsmodels(result):
         # Extract result 
@@ -186,8 +188,8 @@ def prettify_result(result, **options):
         raise ValueError(f"Invalid options provided: {', '.join(invalid_options)}")
     
     # Extract options or set defaults
-    digits = options.get('digits', 3)
-    include_residuals = options.get('include_residuals', False)
+    digits = options.get('digits', DEFAULT_DIGITS)
+    include_residuals = options.get('include_residuals', DEFAULT_INCLUDE_RESIDUALS)
 
     if is_result_type_statsmodels(result):
         # Initialize the output string
