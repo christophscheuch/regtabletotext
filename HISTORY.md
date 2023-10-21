@@ -1,3 +1,6 @@
+# Version 0.0.7
+- Moved type checks to functions and globals
+
 # Version 0.0.6
 - Introduced check if 't' column is present, otherwise use 'z' column to handle models with only one coefficient
 
