@@ -1,3 +1,11 @@
+# ====================
+# SECTION: Imports
+# ====================
+import pandas as pd
+
+# ====================
+# SECTION: Constants
+# ====================
 ALLOWED_OPTIONS = {'digits', 'include_residuals', 'max_width'}
 DEFAULT_DIGITS = 3
 DEFAULT_INCLUDE_RESIDUALS = False
@@ -6,8 +14,9 @@ TYPE_STATSMODELS = 'statsmodels.regression.linear_model.RegressionResultsWrapper
 TYPE_LINEARMODELS = 'linearmodels.panel.results.PanelEffectsResults'
 SUPPORTED_MODELS = {TYPE_STATSMODELS, TYPE_LINEARMODELS}
 
-import pandas as pd
-
+# ===================
+# SECTION: Validation Functions
+# ====================
 def is_result_type_valid(result):
     result_type = type(result).__module__ + "." + type(result).__name__
     return(result_type in SUPPORTED_MODELS)
@@ -20,6 +29,9 @@ def is_result_type_linearmodels(result):
     result_type = type(result).__module__ + "." + type(result).__name__
     return(result_type in TYPE_LINEARMODELS)
 
+# ===================
+# SECTION: Helper Functions
+# ====================
 def clean_model_formula(model_formula, max_width=DEFAULT_MAX_WIDTH):
     """
     Cleans and formats a given model formula to fit within a specified width.
@@ -204,6 +216,9 @@ def create_coefficients_table(result, **options):
     
     return(coefficients_table)
 
+# ===================
+# SECTION: Main Functions
+# ====================
 def prettify_result(result, **options):
     """
     Format and print regression result in a style similar to R's summary() output for linear models.
