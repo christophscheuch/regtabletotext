@@ -16,6 +16,11 @@ pip install regtabletotext
 
 ## How to use regtabletotext?
 
+Currently supported model types:
+
+- `statsmodels.regression.linear_model.RegressionResultsWrapper`
+- `linearmodels.panel.results.PanelEffectsResults`
+
 ### For statsmodels regression output
 
 The following code chunk
@@ -36,7 +41,7 @@ prettify_result(res)
 
 returns this text
 ```
-Model:
+OLS Model:
 Lottery ~ Literacy + Wealth + Region
 
 Coefficients:
@@ -90,7 +95,7 @@ prettify_result(result)
 produces this output
 
 ```
-Model:
+Panel OLS Model:
 y ~ x1 + x2 + EntityEffects + TimeEffects
 
 Coefficients:
