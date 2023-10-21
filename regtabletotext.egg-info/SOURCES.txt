@@ -4,8 +4,10 @@ LICENSE
 README.md
 setup.py
 regtabletotext/__init__.py
+regtabletotext/funs.py
 regtabletotext.egg-info/PKG-INFO
 regtabletotext.egg-info/SOURCES.txt
 regtabletotext.egg-info/dependency_links.txt
 regtabletotext.egg-info/requires.txt
 regtabletotext.egg-info/top_level.txt
+tests/__init__.py

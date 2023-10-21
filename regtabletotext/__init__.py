@@ -1,1 +1,1 @@
-from .sm import prettify_statsmodels
+from .funs import prettify_result
