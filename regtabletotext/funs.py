@@ -279,7 +279,10 @@ def prettify_result(result, **options):
 
     if is_result_type_statsmodels(result):
         # Initialize the output string
-        output = f"OLS Model:\n{clean_model_formula(result.model.formula, max_width=max_width)}\n\n"
+        if (hasattr(result.model, "formula")):
+            output = f"OLS Model:\n{clean_model_formula(result.model.formula, max_width=max_width)}\n\n"
+        else:
+            output = f"OLS Model (no formula provided)\n\n"
         
         # Add residuals to the output string if required
         if include_residuals:
