@@ -80,44 +80,37 @@ def calculate_residuals_statistics(result, **options):
     - result (object): A regression result object that contains a 'resid' attribute, typically from statsmodels.
     - options (dict): Optional parameters for the function. Current options include:
         * 'digits': Number of decimal places to round the calculated statistics to.
-    
+
     Returns:
     - pd.DataFrame: A DataFrame containing the following statistics of residuals:
+        * Mean: Mean value of residuals.
+        * Std: Standard deviation of residuals.
         * Min: Minimum value of residuals.
-        * Q25: 25th percentile (1st quartile) of residuals.
-        * Q50: Median (50th percentile) of residuals.
-        * Q75: 75th percentile (3rd quartile) of residuals.
+        * 25%: 25th percentile (1st quartile) of residuals.
+        * 50%: Median (50th percentile) of residuals.
+        * 75%: 75th percentile (3rd quartile) of residuals.
         * Max: Maximum value of residuals.
     """
-    
+
     # Check if the result object is valid
     if not is_result_type_valid(result):
         raise ValueError("The 'result' parameter should be a single regression result object from statsmodels or linearmodels.")
     
     # Extract options or use defaults
     digits = options.get('digits', DEFAULT_DIGITS)
-    
+
     # Extract residuals
     if is_result_type_statsmodels(result):
         residuals = result.resid
-    
+
     if is_result_type_linearmodels(result):
         residuals = result.resids
 
-    stats = {
-        "Min": residuals.min(),
-        "Q25": residuals.quantile(0.25),
-        "Q50": residuals.median(),
-        "Q75": residuals.quantile(0.75),
-        "Max": residuals.max()
-    }
+    residuals_stats = residuals.describe().iloc[1:]
+    residuals_stats.index = [i.capitalize() for i in residuals_stats.index]
+    residuals_stats = pd.DataFrame(residuals_stats).T.round(digits)
+    residuals_stats.index.name = None
 
-    residuals_stats = pd.DataFrame(stats, index=[0])
-    
-    # Apply options
-    if 'digits' in options:
-        residuals_stats = residuals_stats.round(digits)
-    
     return residuals_stats
 
 def create_coefficients_table(result, **options):
@@ -213,8 +206,33 @@ def create_coefficients_table(result, **options):
             
             # Update the index in the DataFrame
             coefficients_table = coefficients_table.rename(index={coeff_name: truncated_name})
-    
+    coefficients_table.index.name = None
+
     return(coefficients_table)
+
+def create_fixed_effects_table(result):
+    """
+    Create a table summarizing the fixed effects included in a panel model result.
+
+    The table will show the total number of entities and time periods, but only for 
+    the effects that are actually included in the model (based on result.included_effects).
+
+    Parameters:
+    - result (PanelEffectsResults): The results object obtained after fitting a panel data model using `linearmodels`.
+
+    Returns:
+    - DataFrame: A pandas DataFrame with the effect types (Entity, Time) as the index and the total counts as values.
+                 Only the effects present in result.included_effects will be included in the DataFrame.
+    """
+    fixed_effects_table = pd.DataFrame({
+        '': ['Entity', 'Time'],
+        'Total': [result.entity_info.total, result.time_info.total]
+    }).set_index('')
+    fixed_effects_table = fixed_effects_table[fixed_effects_table.index.isin(result.included_effects)]
+    fixed_effects_table.index.name = None
+
+    return(fixed_effects_table)
+
 
 # ===================
 # SECTION: Main Functions
@@ -274,15 +292,18 @@ def prettify_result(result, **options):
         # Add footer with additional statistics to the output string
         output += (
             f"Summary statistics:\n"
-            f"- Number of observations: {result.nobs:.0f}\n"
-            f"- Multiple R-squared: {result.rsquared:.{digits}f}, Adjusted R-squared: {result.rsquared_adj:.{digits}f}\n"
-            f"- F-statistic: {result.fvalue:.{digits}f} on {result.df_model:.0f} and {result.df_resid:.0f} DF, p-value: {result.f_pvalue:.{digits}f}\n"
+            f"- Number of observations: {result.nobs:,.0f}\n"
+            f"- R-squared: {result.rsquared:.{digits}f}, Adjusted R-squared: {result.rsquared_adj:.{digits}f}\n"
+            f"- F-statistic: {result.fvalue:,.{digits}f} on {result.df_model:.0f} and {result.df_resid:.0f} DF, p-value: {result.f_pvalue:.{digits}f}\n"
         )
     
     if is_result_type_linearmodels(result):
         # Initialize the output string
         output = f"Panel OLS Model:\n{clean_model_formula(result.model.formula)}\n\n"
         
+        # Add covariance type
+        output += f"Covariance Type: {result._cov_type}\n\n"
+
         # Add residuals to the output string if required
         if include_residuals:
             # Assuming you have a function called 'calculate_residuals_statistics' for linearmodels
@@ -292,12 +313,16 @@ def prettify_result(result, **options):
         # Assuming you have a function called 'create_coefficients_table' for linearmodels
         output += f"Coefficients:\n{create_coefficients_table(result, digits=digits).to_string()}\n\n"
 
+        # Include table with included fixed effects (if any)
+        if len(result.included_effects) > 0:
+            output += f"Included Fixed Effects:\n{create_fixed_effects_table(result).to_string()}\n\n"            
+
         # Add footer with additional statistics to the output string
         output += (
             f"Summary statistics:\n"
-            f"- Number of observations: {result.nobs:.0f}\n"
-            f"- Overall R-squared: {result.rsquared_overall:.{digits}f}, Within R-squared: {result.rsquared_within:.{digits}f}\n"
-            f"- F-statistic: {result.f_statistic.stat:.{digits}f}, p-value: {result.f_statistic.pval:.{digits}f}\n"
+            f"- Number of observations: {result.nobs:,.0f}\n"
+            f"- R-squared (incl. FE): {result.rsquared_inclusive:.{digits}f}, Within R-squared: {result.rsquared_within:.{digits}f}\n"
+            f"- F-statistic: {result.f_statistic.stat:,.{digits}f}, p-value: {result.f_statistic.pval:.{digits}f}\n"
         )
 
     # Print the output string
