@@ -1,6 +1,6 @@
 Metadata-Version: 2.1
 Name: regtabletotext
-Version: 0.0.7
+Version: 0.0.8
 Summary: Helpers to print regression output as well-formated text
 Home-page: https://github.com/christophscheuch/regtabletotext
 Download-URL: https://pypi.org/project/regtabletotext/
@@ -58,19 +58,18 @@ OLS Model:
 Lottery ~ Literacy + Wealth + Region
 
 Coefficients:
-             Estimate  Std. Error  t-Statistic  p-Value
-
-Intercept      38.652       9.456        4.087    0.000
-Region[T.E]   -15.428       9.727       -1.586    0.117
-Region[T.N]   -10.017       9.260       -1.082    0.283
-Region[T.S]    -4.548       7.279       -0.625    0.534
-Region[T.W]   -10.091       7.196       -1.402    0.165
-Literacy       -0.186       0.210       -0.886    0.378
-Wealth          0.452       0.103        4.390    0.000
+             Estimate  Std. Error  Statistic  p-Value
+Intercept      38.652       9.456      4.087    0.000
+Region[T.E]   -15.428       9.727     -1.586    0.117
+Region[T.N]   -10.017       9.260     -1.082    0.283
+Region[T.S]    -4.548       7.279     -0.625    0.534
+Region[T.W]   -10.091       7.196     -1.402    0.165
+Literacy       -0.186       0.210     -0.886    0.378
+Wealth          0.452       0.103      4.390    0.000
 
 Summary statistics:
 - Number of observations: 85
-- Multiple R-squared: 0.338, Adjusted R-squared: 0.287
+- R-squared: 0.338, Adjusted R-squared: 0.287
 - F-statistic: 6.636 on 6 and 78 DF, p-value: 0.000
 ```
 
@@ -102,7 +101,7 @@ formula = 'y ~ x1 + x2 + EntityEffects + TimeEffects'
 model = PanelOLS.from_formula(formula, df)
 result = model.fit()
 
-prettify_result(result)
+prettify_result(result, include_residuals=True)
 ```
 
 produces this output
@@ -111,17 +110,29 @@ produces this output
 Panel OLS Model:
 y ~ x1 + x2 + EntityEffects + TimeEffects
 
+Residuals:
+ Mean   Std  Min    25%   50%  75%   Max
+  0.0 0.873 -2.7 -0.615 0.002 0.58 3.155
+
 Coefficients:
     Estimate  Std. Error  t-Statistic  p-Value
-
 x1    -0.058       0.052       -1.122    0.263
 x2    -0.041       0.050       -0.804    0.422
 
+Included Fixed Effects:
+        Total
+Entity  100.0
+Time      5.0
+
 Summary statistics:
 - Number of observations: 500
-- Overall R-squared: 0.008, Within R-squared: 0.006
+- R-squared (incl. FE): 0.208, Within R-squared: 0.006
 - F-statistic: 1.048, p-value: 0.351
 ```
+
+# Version 0.0.8
+- Simplified and extended `calculate_residuals_statistics()`
+- Added covariance type and fixed effects table to `linearmodels.panel.result.PanelEffectsresult` print result
 
 # Version 0.0.7
 - Moved type checks to functions and globals
