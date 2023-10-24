@@ -80,44 +80,36 @@ def calculate_residuals_statistics(result, **options):
     - result (object): A regression result object that contains a 'resid' attribute, typically from statsmodels.
     - options (dict): Optional parameters for the function. Current options include:
         * 'digits': Number of decimal places to round the calculated statistics to.
-    
+
     Returns:
     - pd.DataFrame: A DataFrame containing the following statistics of residuals:
+        * Mean: Mean value of residuals.
+        * Std: Standard deviation of residuals.
         * Min: Minimum value of residuals.
-        * Q25: 25th percentile (1st quartile) of residuals.
-        * Q50: Median (50th percentile) of residuals.
-        * Q75: 75th percentile (3rd quartile) of residuals.
+        * 25%: 25th percentile (1st quartile) of residuals.
+        * 50%: Median (50th percentile) of residuals.
+        * 75%: 75th percentile (3rd quartile) of residuals.
         * Max: Maximum value of residuals.
     """
-    
+
     # Check if the result object is valid
     if not is_result_type_valid(result):
         raise ValueError("The 'result' parameter should be a single regression result object from statsmodels or linearmodels.")
     
     # Extract options or use defaults
     digits = options.get('digits', DEFAULT_DIGITS)
-    
+
     # Extract residuals
     if is_result_type_statsmodels(result):
         residuals = result.resid
-    
+
     if is_result_type_linearmodels(result):
         residuals = result.resids
 
-    stats = {
-        "Min": residuals.min(),
-        "Q25": residuals.quantile(0.25),
-        "Q50": residuals.median(),
-        "Q75": residuals.quantile(0.75),
-        "Max": residuals.max()
-    }
+    residuals_stats = residuals.describe().iloc[1:]
+    residuals_stats.index = [i.capitalize() for i in residuals_stats.index]
+    residuals_stats = pd.DataFrame(residuals_stats).T.round(digits)
 
-    residuals_stats = pd.DataFrame(stats, index=[0])
-    
-    # Apply options
-    if 'digits' in options:
-        residuals_stats = residuals_stats.round(digits)
-    
     return residuals_stats
 
 def create_coefficients_table(result, **options):

@@ -1,3 +1,6 @@
+# Version 0.0.8
+- Simplified and extended `calculate_residuals_statistics()`
+
 # Version 0.0.7
 - Moved type checks to functions and globals
 - Removed unnecessary whitespace from model formula
