@@ -1,5 +1,6 @@
 # Version 0.0.8
 - Simplified and extended `calculate_residuals_statistics()`
+- Added covariance type and fixed effects table to `linearmodels.panel.result.PanelEffectsresult` print result
 
 # Version 0.0.7
 - Moved type checks to functions and globals
