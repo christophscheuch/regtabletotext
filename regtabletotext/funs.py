@@ -7,9 +7,6 @@ import pandas as pd
 # SECTION: Constants
 # ====================
 ALLOWED_OPTIONS = {'digits', 'include_residuals', 'max_width'}
-DEFAULT_DIGITS = 3
-DEFAULT_INCLUDE_RESIDUALS = False
-DEFAULT_MAX_WIDTH = 64
 TYPE_STATSMODELS = 'statsmodels.regression.linear_model.RegressionResultsWrapper'
 TYPE_LINEARMODELS = 'linearmodels.panel.results.PanelEffectsResults'
 SUPPORTED_MODELS = {TYPE_STATSMODELS, TYPE_LINEARMODELS}
@@ -32,7 +29,7 @@ def is_result_type_linearmodels(result):
 # ===================
 # SECTION: Helper Functions
 # ====================
-def clean_model_formula(model_formula, max_width=DEFAULT_MAX_WIDTH):
+def clean_model_formula(model_formula, options={'max_width': 64}):
     """
     Cleans and formats a given model formula to fit within a specified width.
 
@@ -46,22 +43,16 @@ def clean_model_formula(model_formula, max_width=DEFAULT_MAX_WIDTH):
     model_formula : str
         The model formula to be cleaned and formatted. Typically, this is a string representation 
         of a regression model formula, e.g., "y ~ x1 + x2 + x3".
-
-    max_width : int, optional
-        The maximum width (number of characters) that the formula should occupy on a single line. 
-        If the formula exceeds this width, it will be split and continued on the next line. 
-        Default is set by `DEFAULT_MAX_WIDTH`.
+    options (dict): Optional parameters for the function. Current options include:
+        * 'max_width': The maximum width (number of characters) that the formula should occupy on a single line (default: 64). 
 
     Returns:
     -------
     str
         The cleaned and formatted model formula.
-
-    Examples:
-    --------
-    >>> clean_model_formula("y ~ x1 + x2 + x3", max_width=10)
-    "y ~ x1 +\n x2 + x3"
     """
+
+    max_width = options.get('max_width')
         
     model_formula_cleaned = ' '.join(model_formula.split())
 
@@ -72,14 +63,14 @@ def clean_model_formula(model_formula, max_width=DEFAULT_MAX_WIDTH):
         split_index = model_formula_cleaned.rfind('+', 0, max_width)
         return model_formula_cleaned[:split_index] + '\n + ' + model_formula_cleaned[split_index+1:].strip()
 
-def calculate_residuals_statistics(result, **options):
+def calculate_residuals_statistics(result, options={'digits': 3}):
     """
     Calculate and return the statistics of residuals from the given regression result.
     
     Parameters:
     - result (object): A regression result object that contains a 'resid' attribute, typically from statsmodels.
     - options (dict): Optional parameters for the function. Current options include:
-        * 'digits': Number of decimal places to round the calculated statistics to.
+        * 'digits': Number of decimal places to round the calculated statistics to (default: 3).
 
     Returns:
     - pd.DataFrame: A DataFrame containing the following statistics of residuals:
@@ -97,7 +88,7 @@ def calculate_residuals_statistics(result, **options):
         raise ValueError("The 'result' parameter should be a single regression result object from statsmodels or linearmodels.")
     
     # Extract options or use defaults
-    digits = options.get('digits', DEFAULT_DIGITS)
+    digits = options.get('digits')
 
     # Extract residuals
     if is_result_type_statsmodels(result):
@@ -113,7 +104,7 @@ def calculate_residuals_statistics(result, **options):
 
     return residuals_stats
 
-def create_coefficients_table(result, **options):
+def create_coefficients_table(result, options={'digits': 3, 'max_width': 64}):
     """
     Extract and format the coefficients table from regression result.
     
@@ -129,6 +120,7 @@ def create_coefficients_table(result, **options):
     options : dict
         Optional parameters for the function. Current options include:
         * 'digits': Number of decimal places to round the values in the coefficients table to (default=3).
+        * 'max_width': The maximum width (number of characters) that the formula should occupy on a single line (default: 64). 
 
     Returns:
     -------
@@ -145,8 +137,8 @@ def create_coefficients_table(result, **options):
         raise ValueError("The 'result' parameter should be a single regression result object from statsmodels or linearmodels.")
     
     # Extract options or use defaults
-    digits = options.get('digits', DEFAULT_DIGITS)
-    max_width = options.get('max_width', DEFAULT_MAX_WIDTH)
+    digits = options.get('digits')
+    max_width = options.get('max_width')
     
     if is_result_type_statsmodels(result):
         # Extract result 
@@ -233,11 +225,10 @@ def create_fixed_effects_table(result):
 
     return(fixed_effects_table)
 
-
 # ===================
 # SECTION: Main Functions
 # ====================
-def prettify_result(result, **options):
+def prettify_result(result, options={'digits': 3, 'include_residuals': False, 'max_width': 64}):
     """
     Format and print regression result in a style similar to R's summary() output for linear models.
     
@@ -255,8 +246,9 @@ def prettify_result(result, **options):
 
     options : dict
         Optional parameters for the function. Current options include:
-        * 'digits': Number of decimal places to round the values in the summary to (default=3).
+        * 'digits': Number of decimal places to round the values in the coefficients table to (default=3).
         * 'include_residuals': Whether to include residuals in the output (default=False).
+        * 'max_width': The maximum width (number of characters) that the formula should occupy on a single line (default: 64). 
 
     Returns:
     -------
@@ -273,24 +265,26 @@ def prettify_result(result, **options):
         raise ValueError(f"Invalid options provided: {', '.join(invalid_options)}")
     
     # Extract options or use defaults
-    digits = options.get('digits', DEFAULT_DIGITS)
-    include_residuals = options.get('include_residuals', DEFAULT_INCLUDE_RESIDUALS)
-    max_width = options.get('max_width', DEFAULT_MAX_WIDTH)
+    digits = options.get('digits', 3)
+    include_residuals = options.get('include_residuals', False)
+    max_width = options.get('max_width', 64)
 
     if is_result_type_statsmodels(result):
         # Initialize the output string
         if (hasattr(result.model, "formula")):
-            output = f"OLS Model:\n{clean_model_formula(result.model.formula, max_width=max_width)}\n\n"
+            model_formula = clean_model_formula(result.model.formula, options={'max_width': max_width})
+            output = f"OLS Model:\n{model_formula}\n\n"
         else:
             output = f"OLS Model (no formula provided)\n\n"
         
         # Add residuals to the output string if required
         if include_residuals:
-            output += f"Residuals:\n{calculate_residuals_statistics(result, digits=digits).to_string(index=False)}\n\n"
+            residuals_statistics = calculate_residuals_statistics(result, options={'digits': digits}).to_string(index=False)
+            output += f"Residuals:\n{residuals_statistics}\n\n"
 
         # Add coefficients to the output string
-        # Assuming you have a function called 'create_coefficients_table' that creates the coefficients table
-        output += f"Coefficients:\n{create_coefficients_table(result, digits=digits, max_width=max_width).to_string()}\n\n"
+        coefficients_table = create_coefficients_table(result, options={'digits': digits, 'max_width': max_width}).to_string()
+        output += f"Coefficients:\n{coefficients_table}\n\n"
 
         # Add footer with additional statistics to the output string
         output += (
@@ -310,15 +304,17 @@ def prettify_result(result, **options):
         # Add residuals to the output string if required
         if include_residuals:
             # Assuming you have a function called 'calculate_residuals_statistics' for linearmodels
-            output += f"Residuals:\n{calculate_residuals_statistics(result, digits=digits).to_string(index=False)}\n\n"
+            residual_statistics = calculate_residuals_statistics(result, options={'digits': digits}).to_string(index=False)
+            output += f"Residuals:\n{residual_statistics}\n\n"
 
         # Add coefficients to the output string
-        # Assuming you have a function called 'create_coefficients_table' for linearmodels
-        output += f"Coefficients:\n{create_coefficients_table(result, digits=digits).to_string()}\n\n"
+        coefficients_table = create_coefficients_table(result, options={'digits': digits, 'max_width': max_width}).to_string()
+        output += f"Coefficients:\n{coefficients_table}\n\n"
 
         # Include table with included fixed effects (if any)
         if len(result.included_effects) > 0:
-            output += f"Included Fixed Effects:\n{create_fixed_effects_table(result).to_string()}\n\n"            
+            fixed_effects_table = create_fixed_effects_table(result).to_string()
+            output += f"Included Fixed Effects:\n{fixed_effects_table}\n\n"            
 
         # Add footer with additional statistics to the output string
         output += (
