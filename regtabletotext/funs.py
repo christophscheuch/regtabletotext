@@ -9,7 +9,8 @@ import pandas as pd
 ALLOWED_OPTIONS = {'digits', 'include_residuals', 'max_width'}
 TYPE_STATSMODELS = 'statsmodels.regression.linear_model.RegressionResultsWrapper'
 TYPE_LINEARMODELS = 'linearmodels.panel.results.PanelEffectsResults'
-SUPPORTED_MODELS = {TYPE_STATSMODELS, TYPE_LINEARMODELS}
+TYPE_ARCH_MODEL = 'arch.univariate.base.ARCHModelResult'
+SUPPORTED_MODELS = {TYPE_STATSMODELS, TYPE_LINEARMODELS, TYPE_ARCH_MODEL}
 
 # ===================
 # SECTION: Validation Functions
@@ -25,6 +26,10 @@ def is_result_type_statsmodels(result):
 def is_result_type_linearmodels(result):
     result_type = type(result).__module__ + "." + type(result).__name__
     return(result_type in TYPE_LINEARMODELS)
+
+def is_result_type_arch_model(result):
+    result_type = type(result).__module__ + "." + type(result).__name__
+    return(result_type in TYPE_ARCH_MODEL)
 
 # ===================
 # SECTION: Helper Functions
@@ -63,12 +68,12 @@ def clean_model_formula(model_formula, options={'max_width': 64}):
         split_index = model_formula_cleaned.rfind('+', 0, max_width)
         return model_formula_cleaned[:split_index] + '\n + ' + model_formula_cleaned[split_index+1:].strip()
 
-def calculate_residuals_statistics(result, options={'digits': 3}):
+def calculate_residuals_statistics(residuals, options={'digits': 3}):
     """
     Calculate and return the statistics of residuals from the given regression result.
     
     Parameters:
-    - result (object): A regression result object that contains a 'resid' attribute, typically from statsmodels.
+    - residuals series, Pandas series type
     - options (dict): Optional parameters for the function. Current options include:
         * 'digits': Number of decimal places to round the calculated statistics to (default: 3).
 
@@ -82,20 +87,9 @@ def calculate_residuals_statistics(result, options={'digits': 3}):
         * 75%: 75th percentile (3rd quartile) of residuals.
         * Max: Maximum value of residuals.
     """
-
-    # Check if the result object is valid
-    if not is_result_type_valid(result):
-        raise ValueError("The 'result' parameter should be a single regression result object from statsmodels or linearmodels.")
-    
+   
     # Extract options or use defaults
     digits = options.get('digits')
-
-    # Extract residuals
-    if is_result_type_statsmodels(result):
-        residuals = result.resid
-
-    if is_result_type_linearmodels(result):
-        residuals = result.resids
 
     residuals_stats = residuals.describe().iloc[1:]
     residuals_stats.index = [i.capitalize() for i in residuals_stats.index]
@@ -103,6 +97,34 @@ def calculate_residuals_statistics(result, options={'digits': 3}):
     residuals_stats.index.name = None
 
     return residuals_stats
+
+def truncate_coefficients_table(coefficients_table, options={'max_width': 64}):
+    """
+    Truncate and return coefficient table with max width.
+    Parameters:
+    - coefficients_table, Pandas DataFrame type
+    - max_width, int number of string characters per line
+    Returns:
+    - pd.DataFrame: A DataFrame containing coefficients
+    """
+    
+    max_width = options.get('max_width')
+
+    # Truncate coefficient names if they exceed max_width
+    for index, row in coefficients_table.iterrows():
+        coeff_name = index
+        values_str = ' '.join(map(str, row.values))
+
+        # Check if the combined width exceeds max_width
+        if len(coeff_name) + len(values_str) + 20 > max_width:
+            # Calculate how much to truncate the coefficient name
+            trunc_length = max_width - len(values_str) - 23
+            truncated_name = coeff_name[:trunc_length] + "..."
+
+            # Update the index in the DataFrame
+            coefficients_table = coefficients_table.rename(
+                index={coeff_name: truncated_name})
+    return coefficients_table
 
 def create_coefficients_table(result, options={'digits': 3, 'max_width': 64}):
     """
@@ -124,6 +146,7 @@ def create_coefficients_table(result, options={'digits': 3, 'max_width': 64}):
 
     Returns:
     -------
+    list of
     pd.DataFrame: 
         A DataFrame containing the following columns:
         * Estimate: Coefficient estimates.
@@ -139,6 +162,9 @@ def create_coefficients_table(result, options={'digits': 3, 'max_width': 64}):
     # Extract options or use defaults
     digits = options.get('digits')
     max_width = options.get('max_width')
+
+    # Initialize output list
+    coefficients_tables_list = []
     
     if is_result_type_statsmodels(result):
         # Extract result 
@@ -185,22 +211,57 @@ def create_coefficients_table(result, options={'digits': 3, 'max_width': 64}):
             .round(digits)
         )
 
-    # Truncate coefficient names if they exceed max_width
-    for index, row in coefficients_table.iterrows():
-        coeff_name = index
-        values_str = ' '.join(map(str, row.values))
-        
-        # Check if the combined width exceeds max_width
-        if len(coeff_name) + len(values_str) + 20 > max_width: 
-            # Calculate how much to truncate the coefficient name
-            trunc_length = max_width - len(values_str) - 23 
-            truncated_name = coeff_name[:trunc_length] + "..."
-            
-            # Update the index in the DataFrame
-            coefficients_table = coefficients_table.rename(index={coeff_name: truncated_name})
-    coefficients_table.index.name = None
+    if is_result_type_arch_model(result):
+        # Extract result
+        result_data = result.summary().tables[1].data
 
-    return(coefficients_table)
+        # Check if 't' column is present, otherwise use 'z' column
+        column_to_use = 't' if 't' in result_data[0] else 'z'
+        p_value_column = 'P>|t|' if 't' in result_data[0] else 'P>|z|'
+
+        # Collect coefficient statistics in a data frame
+        coefficients_table = (
+            pd.DataFrame(result_data[1:], columns=result_data[0])
+            .get(["", "coef", "std err", column_to_use, p_value_column])
+            .rename(columns={
+                "coef": "Estimate",
+                "std err": "Std. Error",
+                column_to_use: "Statistic",
+                p_value_column: "p-Value"
+            })
+            .set_index("")
+            .apply(pd.to_numeric, errors='coerce')
+            .round(digits)
+        )
+
+        # Extract result
+        result_data_vola = result.summary().tables[2].data
+
+        # Collect coefficient statistics in a data frame
+        coefficients_table_vola = (
+            pd.DataFrame(result_data_vola[1:], columns=result_data_vola[0])
+            .get(["", "coef", "std err", column_to_use, p_value_column])
+            .rename(columns={
+                "coef": "Estimate",
+                "std err": "Std. Error",
+                column_to_use: "Statistic",
+                p_value_column: "p-Value"
+            })
+            .set_index("")
+            .apply(pd.to_numeric, errors='coerce')
+            .round(digits)
+        )
+        coefficients_table_vola = truncate_coefficients_table(coefficients_table_vola, options={'max_width': max_width})
+        coefficients_table_vola.index.name = None
+
+    coefficients_table = truncate_coefficients_table(coefficients_table, options={'max_width': max_width})
+    coefficients_table.index.name = None
+    coefficients_tables_list.append(coefficients_table)
+
+    if is_result_type_arch_model(result):
+        coefficients_tables_list.append(coefficients_table_vola)
+
+    return coefficients_tables_list
 
 def create_fixed_effects_table(result):
     """
@@ -221,6 +282,7 @@ def create_fixed_effects_table(result):
         'Total': [result.entity_info.total, result.time_info.total]
     }).set_index('')
     fixed_effects_table = fixed_effects_table[fixed_effects_table.index.isin(result.included_effects)]
+    fixed_effects_table['Total'] = fixed_effects_table['Total'].astype(int)
     fixed_effects_table.index.name = None
 
     return(fixed_effects_table)
@@ -257,7 +319,7 @@ def prettify_result(result, options={'digits': 3, 'include_residuals': False, 'm
     """
     # Check if the result object is valid
     if not is_result_type_valid(result):
-        raise ValueError("The 'result' parameter should be a single regression result object from statsmodels or linearmodels.")
+        raise ValueError("The 'result' parameter is currently not supported.")
     
     # Check if options are valid
     invalid_options = set(options.keys()) - ALLOWED_OPTIONS
@@ -279,11 +341,11 @@ def prettify_result(result, options={'digits': 3, 'include_residuals': False, 'm
         
         # Add residuals to the output string if required
         if include_residuals:
-            residuals_statistics = calculate_residuals_statistics(result, options={'digits': digits}).to_string(index=False)
+            residuals_statistics = calculate_residuals_statistics(result.resid, options={'digits': digits}).to_string(index=False)
             output += f"Residuals:\n{residuals_statistics}\n\n"
 
         # Add coefficients to the output string
-        coefficients_table = create_coefficients_table(result, options={'digits': digits, 'max_width': max_width}).to_string()
+        coefficients_table = create_coefficients_table(result, options={'digits': digits, 'max_width': max_width})[0].to_string()
         output += f"Coefficients:\n{coefficients_table}\n\n"
 
         # Add footer with additional statistics to the output string
@@ -304,11 +366,11 @@ def prettify_result(result, options={'digits': 3, 'include_residuals': False, 'm
         # Add residuals to the output string if required
         if include_residuals:
             # Assuming you have a function called 'calculate_residuals_statistics' for linearmodels
-            residual_statistics = calculate_residuals_statistics(result, options={'digits': digits}).to_string(index=False)
+            residual_statistics = calculate_residuals_statistics(result.resids, options={'digits': digits}).to_string(index=False)
             output += f"Residuals:\n{residual_statistics}\n\n"
 
         # Add coefficients to the output string
-        coefficients_table = create_coefficients_table(result, options={'digits': digits, 'max_width': max_width}).to_string()
+        coefficients_table = create_coefficients_table(result, options={'digits': digits, 'max_width': max_width})[0].to_string()
         output += f"Coefficients:\n{coefficients_table}\n\n"
 
         # Include table with included fixed effects (if any)
@@ -322,6 +384,26 @@ def prettify_result(result, options={'digits': 3, 'include_residuals': False, 'm
             f"- Number of observations: {result.nobs:,.0f}\n"
             f"- R-squared (incl. FE): {result.rsquared_inclusive:.{digits}f}, Within R-squared: {result.rsquared_within:.{digits}f}\n"
             f"- F-statistic: {result.f_statistic.stat:,.{digits}f}, p-value: {result.f_statistic.pval:.{digits}f}\n"
+        )
+
+    if is_result_type_arch_model(result):
+        model_name = result.summary().as_text().split('\n')[0].strip()
+        output = f"\n{model_name}\n\n"
+        if include_residuals:
+            residuals_statistics = calculate_residuals_statistics(result.resid, options={'digits': digits}).to_string(index=False)
+            output += f"Residuals:\n{residuals_statistics}\n\n"
+
+        # Add coefficients to the output string
+        output += f"Mean Coefficients:\n{create_coefficients_table(result, options={'digits': digits, 'max_width': max_width})[0].to_string()}\n\n"
+        output += f"Coefficients for {str(result.model.volatility)}:\n{create_coefficients_table(result, options={'digits': digits, 'max_width': max_width})[1].to_string()}\n\n"
+
+        # Add footer with additional statistics to the output string
+        output += (
+            f"Summary statistics:\n"
+            f"- Number of observations: {result.nobs:,.0f}\n"
+            f"- Distribution: {str(result.model.distribution)}\n"
+            f"- Multiple R-squared: {result.rsquared:.{digits}f}, Adjusted R-squared: {result.rsquared_adj:.{digits}f}\n"
+            f"- BIC: {result.bic:,.{digits}f},  AIC: {result.aic:,.{digits}f}\n"
         )
 
     # Print the output string

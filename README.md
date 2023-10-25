@@ -97,14 +97,17 @@ produces this output
 Panel OLS Model:
 y ~ x1 + x2 + EntityEffects + TimeEffects
 
+Covariance Type: Unadjusted
+
 Residuals:
- Mean   Std  Min    25%   50%  75%   Max
-  0.0 0.873 -2.7 -0.615 0.002 0.58 3.155
+ Mean  Std  Min   25%  50%  75%  Max
+  0.0 0.87 -2.7 -0.62  0.0 0.58 3.16
 
 Coefficients:
     Estimate  Std. Error  t-Statistic  p-Value
-x1    -0.058       0.052       -1.122    0.263
-x2    -0.041       0.050       -0.804    0.422
+
+x1     -0.06        0.05        -1.12     0.26
+x2     -0.04        0.05        -0.80     0.42
 
 Included Fixed Effects:
         Total
@@ -113,6 +116,25 @@ Time      5.0
 
 Summary statistics:
 - Number of observations: 500
-- R-squared (incl. FE): 0.208, Within R-squared: 0.006
-- F-statistic: 1.048, p-value: 0.351
+- R-squared (incl. FE): 0.21, Within R-squared: 0.01
+- F-statistic: 1.05, p-value: 0.35
 ```
+
+### For arch estimation output
+
+```
+import datetime as dt
+import pandas_datareader.data as web
+from arch import arch_model
+import arch.data.sp500
+from regtabletotext import prettify_result
+
+start = dt.datetime(1988, 1, 1)
+end = dt.datetime(2018, 1, 1)
+data = arch.data.sp500.load()
+returns = 100 * data['Adj Close'].pct_change().dropna()
+am_fit = arch_model(returns).fit(update_freq=5)
+
+prettify_result(am_fit)
+```
+
