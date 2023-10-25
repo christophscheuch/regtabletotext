@@ -2,7 +2,7 @@
 
 ## What is regtabletotext?
 
-This package is a collection of helper functions to print regression output of the Python packages `statsmodels` and `linearmodels` as text strings. The helpers are particularly useful for users who want to render regression output in [Quarto](https://quarto.org/) to HTML and PDF.
+This package is a collection of helper functions to print regression output of the Python packages `statsmodels`, `linearmodels`, and `arch` as text strings. The helpers are particularly useful for users who want to render regression output in [Quarto](https://quarto.org/) to HTML and PDF.
 
 If you want to export your results to LaTeX or HTML, please check out [stargazer](https://pypi.org/project/stargazer/).
 
@@ -20,6 +20,7 @@ Currently supported model types:
 
 - `statsmodels.regression.linear_model.RegressionResultsWrapper`
 - `linearmodels.panel.results.PanelEffectsResults`
+- `arch.univariate.base.ARCHModelResult`
 
 ### For statsmodels regression output
 
