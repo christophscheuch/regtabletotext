@@ -88,7 +88,7 @@ formula = 'y ~ x1 + x2 + EntityEffects + TimeEffects'
 model = PanelOLS.from_formula(formula, df)
 result = model.fit()
 
-prettify_result(result, include_residuals=True)
+prettify_result(result, options={'digits':2, 'include_residuals': True})
 ```
 
 produces this output
