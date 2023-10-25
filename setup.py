@@ -25,8 +25,7 @@ setup_args = dict(
 )
 
 install_requires = [
-    'statsmodels',
-    'linearmodels'
+    'pandas'
 ]
 
 if __name__ == '__main__':
