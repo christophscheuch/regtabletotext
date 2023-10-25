@@ -123,6 +123,7 @@ Summary statistics:
 
 ### For arch estimation output
 
+For arch estimations like these:
 ```
 import datetime as dt
 import pandas_datareader.data as web
@@ -138,4 +139,23 @@ am_fit = arch_model(returns).fit(update_freq=5)
 
 prettify_result(am_fit)
 ```
+you get:
+```
+Constant Mean - GARCH Model Results
 
+Mean Coefficients:
+    Estimate  Std. Error  Statistic  p-Value
+mu     0.056       0.011      4.906      0.0
+
+Coefficients for GARCH(p: 1, q: 1):
+          Estimate  Std. Error  Statistic  p-Value
+omega        0.018       0.005      3.738      0.0
+alpha[1]     0.102       0.013      7.852      0.0
+beta[1]      0.885       0.014     64.125      0.0
+
+Summary statistics:
+- Number of observations: 5,030
+- Distribution: Normal distribution
+- Multiple R-squared: 0.000, Adjusted R-squared: 0.000
+- BIC: 13,907.530,  AIC: 13,881.437
+```
