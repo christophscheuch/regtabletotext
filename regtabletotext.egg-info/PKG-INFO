@@ -134,7 +134,7 @@ Summary statistics:
 - F-statistic: 1.05, p-value: 0.35
 ```
 For multiple models, you can use `prettify_results`:
-````
+```
 formula = 'y ~ x1 + x2'
 model = PanelOLS.from_formula(formula, df)
 result1 = model.fit()
