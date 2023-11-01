@@ -91,9 +91,7 @@ result = model.fit()
 
 prettify_result(result, options={'digits':2, 'include_residuals': True})
 ```
-
 produces this output
-
 ```
 Panel OLS Model:
 y ~ x1 + x2 + EntityEffects + TimeEffects
@@ -119,6 +117,37 @@ Summary statistics:
 - Number of observations: 500
 - R-squared (incl. FE): 0.21, Within R-squared: 0.01
 - F-statistic: 1.05, p-value: 0.35
+```
+For multiple models, you can use `prettify_results`:
+````
+formula = 'y ~ x1 + x2'
+model = PanelOLS.from_formula(formula, df)
+result1 = model.fit()
+
+formula = 'y ~ x2 + EntityEffects'
+model = PanelOLS.from_formula(formula, df)
+result2 = model.fit()
+
+formula = 'y ~ x1 + x2 + EntityEffects + TimeEffects'
+model = PanelOLS.from_formula(formula, df)
+result3 = model.fit()
+
+results = [result1, result2, result3]
+
+prettify_results(results)
+```
+The result is:
+```
+Outcome              y               y               y
+
+x1             -0.072 (-1.59)                  -0.058 (-1.12)
+x2             -0.049 (-1.14)  -0.049 (-0.98)  -0.041 (-0.8)
+
+Fixed effects                      Entity       Entity, Time
+VCOV type        Unadjusted      Unadjusted      Unadjusted
+Observations        500             500             500
+R2 (incl. FE)      0.008           0.198           0.208
+Within R2          0.006           0.002           0.006
 ```
 
 ### For arch estimation output

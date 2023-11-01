@@ -2,6 +2,7 @@
 # SECTION: Imports
 # ====================
 import pandas as pd
+from tabulate import tabulate
 
 # ====================
 # SECTION: Constants
@@ -26,6 +27,9 @@ def is_result_type_statsmodels(result):
 def is_result_type_linearmodels(result):
     result_type = type(result).__module__ + "." + type(result).__name__
     return(result_type in TYPE_LINEARMODELS)
+
+def are_result_type_linearmodels(results):
+    return all(is_result_type_linearmodels(result) for result in results)
 
 def is_result_type_arch_model(result):
     result_type = type(result).__module__ + "." + type(result).__name__
@@ -407,4 +411,84 @@ def prettify_result(result, options={'digits': 3, 'include_residuals': False, 'm
         )
 
     # Print the output string
+    print(output)
+
+def prettify_results(results, options={'digits': 3}):
+    """
+    Formats and prints a summary table of regression results from a list of 'linearmodels.panel.results.PanelEffectsResults' objects.
+    
+    The function prints a table that includes the dependent variables, estimated coefficients with t-statistics, fixed effects, 
+    variance-covariance (VCOV) type, number of observations, inclusive R-squared, and within R-squared. Coefficients and t-statistics 
+    are rounded to the specified number of digits. 
+    
+    Parameters:
+        results (list): A list of 'linearmodels.panel.results.PanelEffectsResults' objects containing regression results.
+        options (dict, optional): A dictionary containing formatting options. Currently supports:
+            - 'digits' (int): The number of decimal places to round the coefficients and t-statistics. Default is 3.
+            
+    Raises:
+        ValueError: If 'results' is not a list of 'linearmodels.panel.results.PanelEffectsResults' objects.
+        
+    Returns:
+        None: Prints the formatted summary table to the console.
+    """
+
+    if not are_result_type_linearmodels(results):
+        raise ValueError("Only list of results of type 'linearmodels.panel.results.PanelEffectsResults' are supported.")
+    
+    # Extract options or use defaults
+    digits = options.get('digits', 3)
+
+    # Dependent variables
+    dependent_vars = ["".join(result.model.dependent.vars)  for result in results]
+    dependent_vars.insert(0, "Outcome")
+
+    # Coefficients with t-stats in parentheses 
+    dfs = []
+    for i, result in enumerate(results):
+        table = create_coefficients_table(result)[0]
+        coefs = table.get("Estimate").round(digits)
+        tstats = table.get("t-Statistic").round(2)
+        combined = coefs.astype(str) + " (" + tstats.astype(str) + ")"
+        dfs.append(combined.to_frame(name=f'Estimate_{i+1}'))
+
+    merged_df = pd.concat(dfs, axis=1, join='outer')
+
+    coefficients = merged_df.reset_index().fillna('').astype(str).values.tolist()
+
+    ## Fixed effects (if any)
+    included_effects = [', '.join(result.included_effects)  for result in results]
+    included_effects.insert(0, "Fixed effects")
+
+    ## VCOV type
+    cov_type = [result._cov_type for result in results]
+    cov_type.insert(0, "VCOV type")
+
+    # Observations
+    nobs = [f'{result.nobs:,.0f}' for result in results]
+    nobs.insert(0, "Observations")
+
+    # R2
+    rsquared_inclusive = [f'{result.rsquared_inclusive:,.{digits}f}' for result in results]
+    rsquared_inclusive.insert(0, "R2 (incl. FE)")
+
+    # Within R-squared: 
+    rsquared_within = [f'{result.rsquared_within:,.{digits}f}' for result in results]
+    rsquared_within.insert(0, "Within R2")
+
+    # Assemble table
+    table = []
+    table.append(dependent_vars)
+    table.append("")
+    for sublist in coefficients:
+        table.append(sublist)
+    table.append("")
+    table.append(included_effects)
+    table.append(cov_type)
+    table.append(nobs)
+    table.append(rsquared_inclusive)
+    table.append(rsquared_within)
+
+    output = tabulate(table, tablefmt="plain", colalign=("left",) + ("center",) * (len(results)))
+
     print(output)

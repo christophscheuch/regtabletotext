@@ -1,3 +1,6 @@
+# Version 0.0.9
+- Added support for list of `linearmodels.panel.result.PanelEffectsresult` results 
+
 # Version 0.0.8
 - Added support for 'arch.univariate.base.ARCHModelResult'
 - Simplified and extended `calculate_residuals_statistics()`

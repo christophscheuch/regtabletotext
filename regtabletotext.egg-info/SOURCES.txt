@@ -9,6 +9,8 @@ dist/regtabletotext-0.0.5-py3-none-any.whl
 dist/regtabletotext-0.0.5.tar.gz
 dist/regtabletotext-0.0.7-py3-none-any.whl
 dist/regtabletotext-0.0.7.tar.gz
+dist/regtabletotext-0.0.8-py3-none-any.whl
+dist/regtabletotext-0.0.8.tar.gz
 regtabletotext/__init__.py
 regtabletotext/funs.py
 regtabletotext.egg-info/PKG-INFO
