@@ -441,7 +441,7 @@ def prettify_results(results, options={'digits': 3}):
 
     # Dependent variables
     dependent_vars = ["".join(result.model.dependent.vars)  for result in results]
-    dependent_vars.insert(0, "Dependent Var.")
+    dependent_vars.insert(0, "Dependent var.")
 
     # Coefficients with t-stats in parentheses 
     dfs = []

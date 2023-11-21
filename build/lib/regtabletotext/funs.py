@@ -38,7 +38,7 @@ def is_result_type_arch_model(result):
 # ===================
 # SECTION: Helper Functions
 # ====================
-def clean_model_formula(model_formula, options={'max_width': 64}):
+def clean_model_formula(model_formula, options={'max_width': 80}):
     """
     Cleans and formats a given model formula to fit within a specified width.
 
@@ -53,7 +53,7 @@ def clean_model_formula(model_formula, options={'max_width': 64}):
         The model formula to be cleaned and formatted. Typically, this is a string representation 
         of a regression model formula, e.g., "y ~ x1 + x2 + x3".
     options (dict): Optional parameters for the function. Current options include:
-        * 'max_width': The maximum width (number of characters) that the formula should occupy on a single line (default: 64). 
+        * 'max_width': The maximum width (number of characters) that the formula should occupy on a single line (default: 80). 
 
     Returns:
     -------
@@ -102,7 +102,7 @@ def calculate_residuals_statistics(residuals, options={'digits': 3}):
 
     return residuals_stats
 
-def truncate_coefficients_table(coefficients_table, options={'max_width': 64}):
+def truncate_coefficients_table(coefficients_table, options={'max_width': 80}):
     """
     Truncate and return coefficient table with max width.
     Parameters:
@@ -130,7 +130,7 @@ def truncate_coefficients_table(coefficients_table, options={'max_width': 64}):
                 index={coeff_name: truncated_name})
     return coefficients_table
 
-def create_coefficients_table(result, options={'digits': 3, 'max_width': 64}):
+def create_coefficients_table(result, options={'digits': 3, 'max_width': 80}):
     """
     Extract and format the coefficients table from regression result.
     
@@ -146,7 +146,7 @@ def create_coefficients_table(result, options={'digits': 3, 'max_width': 64}):
     options : dict
         Optional parameters for the function. Current options include:
         * 'digits': Number of decimal places to round the values in the coefficients table to (default=3).
-        * 'max_width': The maximum width (number of characters) that the formula should occupy on a single line (default: 64). 
+        * 'max_width': The maximum width (number of characters) that the formula should occupy on a single line (default: 80). 
 
     Returns:
     -------
@@ -294,7 +294,7 @@ def create_fixed_effects_table(result):
 # ===================
 # SECTION: Main Functions
 # ====================
-def prettify_result(result, options={'digits': 3, 'include_residuals': False, 'max_width': 64}):
+def prettify_result(result, options={'digits': 3, 'include_residuals': False, 'max_width': 80}):
     """
     Format and print regression result in a style similar to R's summary() output for linear models.
     
@@ -314,7 +314,7 @@ def prettify_result(result, options={'digits': 3, 'include_residuals': False, 'm
         Optional parameters for the function. Current options include:
         * 'digits': Number of decimal places to round the values in the coefficients table to (default=3).
         * 'include_residuals': Whether to include residuals in the output (default=False).
-        * 'max_width': The maximum width (number of characters) that the formula should occupy on a single line (default: 64). 
+        * 'max_width': The maximum width (number of characters) that the formula should occupy on a single line (default: 80). 
 
     Returns:
     -------
@@ -333,7 +333,7 @@ def prettify_result(result, options={'digits': 3, 'include_residuals': False, 'm
     # Extract options or use defaults
     digits = options.get('digits', 3)
     include_residuals = options.get('include_residuals', False)
-    max_width = options.get('max_width', 64)
+    max_width = options.get('max_width', 80)
 
     if is_result_type_statsmodels(result):
         # Initialize the output string
@@ -441,7 +441,7 @@ def prettify_results(results, options={'digits': 3}):
 
     # Dependent variables
     dependent_vars = ["".join(result.model.dependent.vars)  for result in results]
-    dependent_vars.insert(0, "Outcome")
+    dependent_vars.insert(0, "Dependent var.")
 
     # Coefficients with t-stats in parentheses 
     dfs = []

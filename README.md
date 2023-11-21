@@ -120,6 +120,8 @@ Summary statistics:
 ```
 For multiple models, you can use `prettify_results`:
 ```
+from regtabletotext import prettify_results
+
 formula = 'y ~ x1 + x2'
 model = PanelOLS.from_formula(formula, df)
 result1 = model.fit()
@@ -138,16 +140,16 @@ prettify_results(results)
 ```
 The result is:
 ```
-Outcome              y               y               y
+Dependent var.        y               y               y
 
-x1             -0.072 (-1.59)                  -0.058 (-1.12)
-x2             -0.049 (-1.14)  -0.049 (-0.98)  -0.041 (-0.8)
+x1              -0.072 (-1.59)                  -0.058 (-1.12)
+x2              -0.049 (-1.14)  -0.049 (-0.98)  -0.041 (-0.8)
 
-Fixed effects                      Entity       Entity, Time
-VCOV type        Unadjusted      Unadjusted      Unadjusted
-Observations        500             500             500
-R2 (incl. FE)      0.008           0.198           0.208
-Within R2          0.006           0.002           0.006
+Fixed effects                       Entity       Entity, Time
+VCOV type         Unadjusted      Unadjusted      Unadjusted
+Observations         500             500             500
+R2 (incl. FE)       0.008           0.198           0.208
+Within R2           0.006           0.002           0.006
 ```
 
 ### For arch estimation output

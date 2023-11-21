@@ -1,3 +1,6 @@
+# Version 0.0.10
+- Increased default `max_width` from 64 to 80
+
 # Version 0.0.9
 - Added support for list of `linearmodels.panel.result.PanelEffectsresult` results 
 
