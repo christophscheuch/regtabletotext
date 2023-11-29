@@ -185,7 +185,7 @@ def create_coefficients_table(result, options={'digits': 3, 'max_width': 80}):
             .rename(columns={
                 "coef": "Estimate",
                 "std err": "Std. Error",
-                column_to_use: "Statistic",
+                column_to_use: "t-Statistic",
                 p_value_column: "p-Value"
             })
             .set_index("")
@@ -230,7 +230,7 @@ def create_coefficients_table(result, options={'digits': 3, 'max_width': 80}):
             .rename(columns={
                 "coef": "Estimate",
                 "std err": "Std. Error",
-                column_to_use: "Statistic",
+                column_to_use: "t-Statistic",
                 p_value_column: "p-Value"
             })
             .set_index("")
@@ -248,7 +248,7 @@ def create_coefficients_table(result, options={'digits': 3, 'max_width': 80}):
             .rename(columns={
                 "coef": "Estimate",
                 "std err": "Std. Error",
-                column_to_use: "Statistic",
+                column_to_use: "t-Statistic",
                 p_value_column: "p-Value"
             })
             .set_index("")
