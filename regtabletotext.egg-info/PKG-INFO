@@ -1,6 +1,6 @@
 Metadata-Version: 2.1
 Name: regtabletotext
-Version: 0.0.10
+Version: 0.0.11
 Summary: Helpers to print regression output as well-formated text
 Home-page: https://github.com/christophscheuch/regtabletotext
 Download-URL: https://pypi.org/project/regtabletotext/
@@ -10,6 +10,9 @@ License: MIT
 Keywords: Regression,Table,Formatting,Quarto,Text
 Description-Content-Type: text/markdown
 License-File: LICENSE
+Requires-Dist: pandas
+Requires-Dist: numpy
+Requires-Dist: tabulate
 
 # regtabletotext: helpers to print regression output as text
 
@@ -39,13 +42,19 @@ Currently supported model types:
 
 The following code chunk
 ```
+import pandas as pd
 import numpy as np
-import statsmodels.api as sm
 import statsmodels.formula.api as smf
 from regtabletotext import prettify_result
 
-df = sm.datasets.get_rdataset("Guerry", "HistData").data
-df = df[['Lottery', 'Literacy', 'Wealth', 'Region']].dropna()
+n = 100 
+data = pd.DataFrame({
+    'age': np.random.randint(18, 65, n),
+    'income': np.random.normal(50, 20, n) ,
+    'education': np.random.randint(12, 22, n),
+    'hours_worked': np.random.randint(20, 60, n),
+    'satisfaction': np.random.randint(1, 11, n) 
+})
 
 mod = smf.ols(formula='Lottery ~ Literacy + Wealth + Region', data=df)
 res = mod.fit()
@@ -203,6 +212,9 @@ Summary statistics:
 - Multiple R-squared: 0.000, Adjusted R-squared: 0.000
 - BIC: 13,907.530,  AIC: 13,881.437
 ```
+
+# Version 0.0.11
+- Replaced reporting of F-statistic nan with "F-statistic not available"
 
 # Version 0.0.10
 - Increased default `max_width` from 64 to 80

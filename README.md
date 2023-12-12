@@ -26,13 +26,19 @@ Currently supported model types:
 
 The following code chunk
 ```
+import pandas as pd
 import numpy as np
-import statsmodels.api as sm
 import statsmodels.formula.api as smf
 from regtabletotext import prettify_result
 
-df = sm.datasets.get_rdataset("Guerry", "HistData").data
-df = df[['Lottery', 'Literacy', 'Wealth', 'Region']].dropna()
+n = 100 
+data = pd.DataFrame({
+    'age': np.random.randint(18, 65, n),
+    'income': np.random.normal(50, 20, n) ,
+    'education': np.random.randint(12, 22, n),
+    'hours_worked': np.random.randint(20, 60, n),
+    'satisfaction': np.random.randint(1, 11, n) 
+})
 
 mod = smf.ols(formula='Lottery ~ Literacy + Wealth + Region', data=df)
 res = mod.fit()

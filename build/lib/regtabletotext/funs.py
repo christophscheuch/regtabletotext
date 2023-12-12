@@ -2,6 +2,7 @@
 # SECTION: Imports
 # ====================
 import pandas as pd
+import numpy as np
 from tabulate import tabulate
 
 # ====================
@@ -185,7 +186,7 @@ def create_coefficients_table(result, options={'digits': 3, 'max_width': 80}):
             .rename(columns={
                 "coef": "Estimate",
                 "std err": "Std. Error",
-                column_to_use: "Statistic",
+                column_to_use: "t-Statistic",
                 p_value_column: "p-Value"
             })
             .set_index("")
@@ -230,7 +231,7 @@ def create_coefficients_table(result, options={'digits': 3, 'max_width': 80}):
             .rename(columns={
                 "coef": "Estimate",
                 "std err": "Std. Error",
-                column_to_use: "Statistic",
+                column_to_use: "t-Statistic",
                 p_value_column: "p-Value"
             })
             .set_index("")
@@ -248,7 +249,7 @@ def create_coefficients_table(result, options={'digits': 3, 'max_width': 80}):
             .rename(columns={
                 "coef": "Estimate",
                 "std err": "Std. Error",
-                column_to_use: "Statistic",
+                column_to_use: "t-Statistic",
                 p_value_column: "p-Value"
             })
             .set_index("")
@@ -357,8 +358,12 @@ def prettify_result(result, options={'digits': 3, 'include_residuals': False, 'm
             f"Summary statistics:\n"
             f"- Number of observations: {result.nobs:,.0f}\n"
             f"- R-squared: {result.rsquared:.{digits}f}, Adjusted R-squared: {result.rsquared_adj:.{digits}f}\n"
-            f"- F-statistic: {result.fvalue:,.{digits}f} on {result.df_model:.0f} and {result.df_resid:.0f} DF, p-value: {result.f_pvalue:.{digits}f}\n"
         )
+        if (np.isnan(result.fvalue)):
+            output += f"- F-statistic not available\n"
+        else:
+            output += f"- F-statistic: {result.fvalue:,.{digits}f} on {result.df_model:.0f} and {result.df_resid:.0f} DF, p-value: {result.f_pvalue:.{digits}f}\n"
+
     
     if is_result_type_linearmodels(result):
         # Initialize the output string
@@ -387,8 +392,11 @@ def prettify_result(result, options={'digits': 3, 'include_residuals': False, 'm
             f"Summary statistics:\n"
             f"- Number of observations: {result.nobs:,.0f}\n"
             f"- R-squared (incl. FE): {result.rsquared_inclusive:.{digits}f}, Within R-squared: {result.rsquared_within:.{digits}f}\n"
-            f"- F-statistic: {result.f_statistic.stat:,.{digits}f}, p-value: {result.f_statistic.pval:.{digits}f}\n"
         )
+        if (np.isnan(result.f_statistic.stat)):
+            f"- F-statistic not available\n"
+        else:
+            f"- F-statistic: {result.f_statistic.stat:,.{digits}f}, p-value: {result.f_statistic.pval:.{digits}f}\n"
 
     if is_result_type_arch_model(result):
         model_name = result.summary().as_text().split('\n')[0].strip()

@@ -1,3 +1,6 @@
+# Version 0.0.11
+- Replaced reporting of F-statistic nan with "F-statistic not available"
+
 # Version 0.0.10
 - Increased default `max_width` from 64 to 80
 
