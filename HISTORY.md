@@ -1,3 +1,7 @@
+# Version 0.0.12
+- Added note that table contains t-statistics
+- `prettify_result()` now passes lists to `prettify_results()`
+
 # Version 0.0.11
 - Replaced reporting of F-statistic nan with "F-statistic not available"
 

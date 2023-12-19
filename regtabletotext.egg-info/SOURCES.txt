@@ -5,6 +5,8 @@ README.md
 setup.py
 dist/regtabletotext-0.0.10-py3-none-any.whl
 dist/regtabletotext-0.0.10.tar.gz
+dist/regtabletotext-0.0.11-py3-none-any.whl
+dist/regtabletotext-0.0.11.tar.gz
 dist/regtabletotext-0.0.4-py3-none-any.whl
 dist/regtabletotext-0.0.4.tar.gz
 dist/regtabletotext-0.0.5-py3-none-any.whl

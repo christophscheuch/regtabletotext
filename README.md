@@ -40,7 +40,7 @@ data = pd.DataFrame({
     'satisfaction': np.random.randint(1, 11, n) 
 })
 
-mod = smf.ols(formula='Lottery ~ Literacy + Wealth + Region', data=df)
+mod = smf.ols(formula='income ~ age + education + hours_worked', data=data)
 res = mod.fit()
 
 prettify_result(res)
@@ -124,10 +124,8 @@ Summary statistics:
 - R-squared (incl. FE): 0.21, Within R-squared: 0.01
 - F-statistic: 1.05, p-value: 0.35
 ```
-For multiple models, you can use `prettify_results`:
+For multiple models, you can also use `prettify_result`:
 ```
-from regtabletotext import prettify_results
-
 formula = 'y ~ x1 + x2'
 model = PanelOLS.from_formula(formula, df)
 result1 = model.fit()
@@ -142,7 +140,7 @@ result3 = model.fit()
 
 results = [result1, result2, result3]
 
-prettify_results(results)
+prettify_result(results)
 ```
 The result is:
 ```

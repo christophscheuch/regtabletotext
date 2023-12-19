@@ -322,6 +322,10 @@ def prettify_result(result, options={'digits': 3, 'include_residuals': False, 'm
     None
         The function prints the formatted summary directly.
     """
+    # Pass to prettify_results() if the result object is a list
+    if (isinstance(result, list)):
+        return(prettify_results(result))
+
     # Check if the result object is valid
     if not is_result_type_valid(result):
         raise ValueError("The 'result' parameter is currently not supported.")
@@ -419,7 +423,7 @@ def prettify_result(result, options={'digits': 3, 'include_residuals': False, 'm
         )
 
     # Print the output string
-    print(output)
+    return(print(output))
 
 def prettify_results(results, options={'digits': 3}):
     """
@@ -498,5 +502,7 @@ def prettify_results(results, options={'digits': 3}):
     table.append(rsquared_within)
 
     output = tabulate(table, tablefmt="plain", colalign=("left",) + ("center",) * (len(results)))
+
+    output += "\n\nNote: t-statistics in parentheses"
 
     print(output)
